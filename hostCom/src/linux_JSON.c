@@ -108,8 +108,4 @@ void SetAlgoidAck(char * buffer, struct JsonCommand srcMessage, char * myID, cha
 			jwObj_string( "MsgType", ackMessage );				// add object key:value pairs
 		jwEnd();
 		jwClose();
-
-
-		printf("\n\n ENVOYE: %s", buffer);
-
 }
