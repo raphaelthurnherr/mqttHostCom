@@ -21,7 +21,7 @@ char ClientID[50]="BUGGY_";
 int  mqttMsgArrived(void *context, char *topicName, int topicLen, MQTTClient_message *message);
 void sendMQTTreply(struct JsonCommand srcMessage, char * msgType);
 int pushMsgStack(void);
-char pullMsgStack(unsigned char ptrStack);
+int pullMsgStack(unsigned char ptrStack);
 char clearMsgStack(unsigned char ptrStack);
 
 // Initialisation des variables
@@ -111,7 +111,10 @@ int pushMsgStack(void){
 		printf("param: %d\n",AlgoidMsgRXStack[ptrMsgRXstack].msgParam);
 		printf("ValCount: %d\n",AlgoidMsgRXStack[ptrMsgRXstack].msgValueCnt);
 		for(i=0;i<AlgoidMsgRXStack[ptrMsgRXstack].msgValueCnt;i++){
-			 printf("Name: %s   Data: %d\n", AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].mode, AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].value);
+			if(AlgoidMsgRXStack[ptrMsgRXstack].msgParam==LL_WD)
+				printf("wheel: %s   velocity: %d   time: %d\n", AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].wheel, AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].velocity, AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].time);
+			else
+				printf("mode: %s   value: %d\n", AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].mode, AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].value);
 		}
 
 		ptrMsgRXstack++;
@@ -119,31 +122,33 @@ int pushMsgStack(void){
 	}
 }
 
-char pullMsgStack(unsigned char ptrStack){
+int pullMsgStack(unsigned char ptrStack){
 		int i;
 
-		AlgoidMsgRXStack[ptrStack];
+		if(AlgoidMsgRXStack[ptrStack].msgType!=-1){
+			AlgoidCommand=AlgoidMsgRXStack[ptrStack];
 
-		// Déplace les element de la pile
-		for(i=ptrStack;i<9;i++){
-			AlgoidMsgRXStack[ptrStack]=AlgoidMsgRXStack[ptrStack+1];
-			ptrStack++;
-		}
+			// Déplace les element de la pile
+			for(i=ptrStack;i<9;i++){
+				AlgoidMsgRXStack[ptrStack]=AlgoidMsgRXStack[ptrStack+1];
+				ptrStack++;
+			}
 
-		// EFFACE LES DONNEES DE LA PILE
-		strcpy(AlgoidMsgRXStack[9].msgFrom, "");
-		strcpy(AlgoidMsgRXStack[9].msgTo, "");
-		AlgoidMsgRXStack[9].msgID=-1;
+			// EFFACE LES DONNEES DE LA PILE
+			strcpy(AlgoidMsgRXStack[9].msgFrom, "");
+			strcpy(AlgoidMsgRXStack[9].msgTo, "");
+			AlgoidMsgRXStack[9].msgID=-1;
 
-		AlgoidMsgRXStack[9].msgParam=-1;
-		AlgoidMsgRXStack[9].msgType=-1;
+			AlgoidMsgRXStack[9].msgParam=-1;
+			AlgoidMsgRXStack[9].msgType=-1;
 
-		for(i=0;i<AlgoidMsgRXStack[9].msgValueCnt;i++){
-			strcpy(AlgoidMsgRXStack[9].msgValArray[i].mode, "");
-			AlgoidMsgRXStack[9].msgValArray[i].value=-1;
-		}
+			for(i=0;i<AlgoidMsgRXStack[9].msgValueCnt;i++){
+				strcpy(AlgoidMsgRXStack[9].msgValArray[i].mode, "");
+				AlgoidMsgRXStack[9].msgValArray[i].value=-1;
+			}
 
-		return 0;
+			return 1;
+		}else return 0;
 }
 // ----------------------
 

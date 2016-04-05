@@ -41,7 +41,6 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 		jRead_string((char *)srcBuffer, "{'From'", AlgoidMessageRX.msgFrom, 15, NULL );
 		AlgoidMessageRX.msgID= jRead_int((char *)srcBuffer,  "{'MsgID'", NULL);
 
-
 	// MESSAGE TYPE
 				char myDataString[20];
 				// Clear string
@@ -49,7 +48,7 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 
 				jRead_string((char *)srcBuffer,  "{'Message'{'MsgType'",myDataString,15, NULL);
 
-				AlgoidMessageRX.msgType=-1;
+				AlgoidMessageRX.msgType=	-1;
 				if(!strcmp(myDataString, "command")) AlgoidMessageRX.msgType = COMMAND;
 				if(!strcmp(myDataString, "request")) AlgoidMessageRX.msgType = REQUEST;
 				if(!strcmp(myDataString, "ack")) AlgoidMessageRX.msgType = ACK;
@@ -64,13 +63,14 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 				jRead_string((char *)srcBuffer,  "{'Message'{'MsgParam'",myDataString,15, NULL);
 
 				AlgoidMessageRX.msgParam=-1;
-				if(!strcmp(myDataString, "forward")) AlgoidMessageRX.msgParam = FORWARD;
-				if(!strcmp(myDataString, "back")) AlgoidMessageRX.msgParam = BACK;
-				if(!strcmp(myDataString, "left")) AlgoidMessageRX.msgParam = LEFT;
-				if(!strcmp(myDataString, "right")) AlgoidMessageRX.msgParam = RIGHT;
-				if(!strcmp(myDataString, "rotateLeft")) AlgoidMessageRX.msgParam = ROTATE_LEFT;
-				if(!strcmp(myDataString, "rotateRight")) AlgoidMessageRX.msgParam = ROTATE_RIGHT;
-				if(!strcmp(myDataString, "stop")) AlgoidMessageRX.msgParam = STOP;
+					if(!strcmp(myDataString, "forward")) AlgoidMessageRX.msgParam = FORWARD;
+					if(!strcmp(myDataString, "back")) AlgoidMessageRX.msgParam = BACK;
+					if(!strcmp(myDataString, "left")) AlgoidMessageRX.msgParam = LEFT;
+					if(!strcmp(myDataString, "right")) AlgoidMessageRX.msgParam = RIGHT;
+					if(!strcmp(myDataString, "rotateLeft")) AlgoidMessageRX.msgParam = ROTATE_LEFT;
+					if(!strcmp(myDataString, "rotateRight")) AlgoidMessageRX.msgParam = ROTATE_RIGHT;
+					if(!strcmp(myDataString, "stop")) AlgoidMessageRX.msgParam = STOP;
+					if(!strcmp(myDataString, "2wd")) AlgoidMessageRX.msgParam = LL_WD;
 
 	// DATA ARRAY
 				  jRead((char *)srcBuffer, "{'Message'{'MsgValue'", &element );
@@ -79,8 +79,16 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 					  AlgoidMessageRX.msgValueCnt=element.elements;
 				      for(i=0; i<element.elements; i++ )    // loop for no. of elements in JSON
 				      {
-				    	  jRead_string((char *)srcBuffer, "{'Message'{'MsgValue'[*{'mode'", AlgoidMessageRX.msgValArray[i].mode, 15, &i );
-				    	  AlgoidMessageRX.msgValArray[i].value= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'value'", &i);
+				    	  if(AlgoidMessageRX.msgParam == LL_WD){
+					    	  jRead_string((char *)srcBuffer, "{'Message'{'MsgValue'[*{'wheel'", AlgoidMessageRX.msgValArray[i].wheel, 15, &i );
+					    	  AlgoidMessageRX.msgValArray[i].velocity= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'velocity'", &i);
+					    	  AlgoidMessageRX.msgValArray[i].time= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'time'", &i);
+				    	  }
+				    	  else{
+					    	  jRead_string((char *)srcBuffer, "{'Message'{'MsgValue'[*{'mode'", AlgoidMessageRX.msgValArray[i].mode, 15, &i );
+					    	  AlgoidMessageRX.msgValArray[i].value= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'value'", &i);
+				    	  }
+
 				    }
 				  }
 

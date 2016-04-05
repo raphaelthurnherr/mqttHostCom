@@ -22,6 +22,7 @@
 	#define BACK_SPIN_LEFT 9
 	#define BACK_SPIN_RIGHT 10
 	#define MOTOR_STATE		 11
+	#define LL_WD			100				// LOW LEVEL WHEEL DIRECTIV
 
 	// DEFINITION DES PARAMETRES DE TYPE REQUEST
 	#define DISTANCE   	   0
@@ -37,6 +38,10 @@
 struct mValue{
 	char mode[100];
 	int value;
+
+	char wheel[50];
+	int velocity;
+	int time;
 };
 
 typedef struct JsonCommand{
@@ -49,7 +54,7 @@ typedef struct JsonCommand{
 	struct mValue msgValArray[20];
 }ALGOID;
 
-ALGOID AlgoidCommand;
+ALGOID AlgoidCommand;    // Utilisé par main.c
 ALGOID AlgoidMessageRX;
 ALGOID AlgoidMsgRXStack[10];
 
