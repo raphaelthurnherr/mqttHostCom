@@ -102,9 +102,10 @@ int pushMsgStack(void){
 	if(ptrMsgRXstack>=10){
 		return -1;
 	}else{
+
 		// ENREGISTREMENT DU MESSAGE DANS LA PILE
 		AlgoidMsgRXStack[ptrMsgRXstack]=AlgoidMessageRX;
-
+/*
 		// AFFICHAGE DES DONNEES
 		printf("Message to   %s   from   %s with ID %d \n",AlgoidMsgRXStack[ptrMsgRXstack].msgTo,AlgoidMsgRXStack[ptrMsgRXstack].msgFrom, AlgoidMsgRXStack[ptrMsgRXstack].msgID );
 		printf("type:  %d\n",AlgoidMsgRXStack[ptrMsgRXstack].msgType);
@@ -116,7 +117,7 @@ int pushMsgStack(void){
 			else
 				printf("mode: %s   value: %d\n", AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].mode, AlgoidMsgRXStack[ptrMsgRXstack].msgValArray[i].value);
 		}
-
+*/
 		ptrMsgRXstack++;
 		return ptrMsgRXstack-1;
 	}
@@ -167,11 +168,16 @@ char clearMsgStack(unsigned char ptrStack){
 			for(i=0;i<AlgoidMsgRXStack[ptrStack].msgValueCnt;i++){
 				strcpy(AlgoidMsgRXStack[ptrStack].msgValArray[i].mode, "");
 				AlgoidMsgRXStack[ptrStack].msgValArray[i].value=-1;
+
+				strcpy(AlgoidMsgRXStack[ptrStack].msgValArray[i].wheel, "");
+				AlgoidMsgRXStack[ptrStack].msgValArray[i].time=-1;
+				AlgoidMsgRXStack[ptrStack].msgValArray[i].velocity=-1;
 			}
 			return 0;
 		}
 		return 1;
 }
+
 // ------------------------------------------------------------------------------------
 // INITMESSAGER: Initialisation du gestionnaire de message
 // - Demarrage thread messager
@@ -230,7 +236,7 @@ int mqttMsgArrived(void *context, char *topicName, int topicLen, MQTTClient_mess
 }
 
 
-void sendMQTTreply(struct JsonCommand srcMessage, char * msgType){
+void sendMQTTreply(ALGOID srcMessage, char * msgType){
 	char MQTTbuf[1024];
 
 	SetAlgoidAck(MQTTbuf, srcMessage, ClientID, msgType);

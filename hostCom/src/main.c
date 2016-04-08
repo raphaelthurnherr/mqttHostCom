@@ -9,12 +9,17 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 #include "messagesManager.h"
 #include "linux_json.h"
 #include "udpPublish.h"
 #include "main.h"
+
+int processMsgCommand(void);
+int processMsgRequest(void);
+int make2WDaction(void);
+int getWDvalue(char * wheelName);
 
 int move2WDbuggy(int leftWheelSpeed, int rightWheelSpeed);
 
@@ -35,18 +40,13 @@ int main(void) {
 
 // COMMANDE ALGOID RECUE
 		if(pullMsgStack(0)){
-			printf("[main] messageID:  %d  param: %d   cmd: %d\n\n",AlgoidCommand.msgID,AlgoidCommand.msgParam,AlgoidCommand.msgType );
-			//move2WDbuggy(AlgoidCommand.msgValArray[0].velocity, AlgoidCommand.msgValArray[1].velocity);
-			if(AlgoidCommand.msgType==COMMAND){
-				switch(AlgoidCommand.msgParam){
-					case LL_WD : move2WDbuggy(AlgoidCommand.msgValArray[0].velocity, AlgoidCommand.msgValArray[1].velocity); break;
-					default : printf("\n blabla\n"); break;
-				}
+//			printf("[main] messageID:  %d  param: %d   cmd: %d\n\n",AlgoidCommand.msgID,AlgoidCommand.msgParam,AlgoidCommand.msgType );
+			switch(AlgoidCommand.msgType){
+				case COMMAND : processMsgCommand(); break;
+				case REQUEST : processMsgRequest(); break;
+				default : break;
 			}
 		}
-
-
-
 
     	if(myChar=='q'){
     		endState=CloseMessager();
@@ -95,6 +95,69 @@ int main(void) {
 	return EXIT_SUCCESS;
 }
 
+// -------------------------------------------------------------------
+// PROCESSCOMMAND
+// -------------------------------------------------------------------
+int processMsgCommand(void){
+	switch(AlgoidCommand.msgParam){
+		case LL_WD : make2WDaction(); break;
+		default : printf("\n blabla\n"); break;
+	}
+	return 0;
+}
+
+// -------------------------------------------------------------------
+// PROCESSMSGRQUEST
+// -------------------------------------------------------------------
+int processMsgRequest(void){
+
+	return 0;
+}
+
+// -------------------------------------------------------------------
+// MAKE2WDACTION
+// -------------------------------------------------------------------
+int make2WDaction(void){
+	int ptrData;
+	char test[10]="";
+
+	//wheel.left.velocity=0;
+	//wheel.right.velocity=0;
+
+	ptrData=getWDvalue("left");
+	if(ptrData >=0)
+		wheel.left.velocity=AlgoidCommand.msgValArray[ptrData].velocity;
+
+	ptrData=getWDvalue("right");
+	if(ptrData >=0)
+		wheel.right.velocity=AlgoidCommand.msgValArray[ptrData].velocity;
+
+	move2WDbuggy(wheel.left.velocity, wheel.right.velocity);
+	return 0;
+}
+
+
+// -------------------------------------------------------------------
+// GETWDVALUE
+// -------------------------------------------------------------------
+int getWDvalue(char* wheelName){
+	int i;
+	int searchPtr = -1;
+	char searchText[50];
+	char * mySearch;
+
+	// Recherche dans les donnée recues la valeur correspondante au paramètre "wheelName"
+
+	for(i=0;i<AlgoidCommand.msgValueCnt;i++){
+		memset(searchText, 0, 50);
+		mySearch=AlgoidCommand.msgValArray[i].wheel;
+		strncpy(searchText,mySearch, strlen(AlgoidCommand.msgValArray[i].wheel));
+
+		if(!strcmp(searchText, wheelName))
+			searchPtr=i;
+	}
+	return searchPtr;
+}
 
 // -------------------------------------------------------------------
 // MOVE2WDBUGGY

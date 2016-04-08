@@ -7,6 +7,20 @@
  Description : Hello World in C, Ansi-style
  ============================================================================
  */
+#define KEY_TO "{'MsgTo'"
+#define KEY_FROM "{'MsgFrom'"
+#define KEY_MSGID "{'MsgID'"
+#define KEY_MESSAGE ""
+#define KEY_MESSAGE_TYPE "{'MsgData'{'MsgType'"
+#define KEY_MESSAGE_PARAM "{'MsgData'{'MsgParam'"
+#define KEY_MESSAGE_VALUE "{'MsgData'{'MsgValue'"
+
+#define KEY_MESSAGE_VALUE_MODE "{'MsgData'{'MsgValue'[*{'mode'"
+#define KEY_MESSAGE_VALUE_VALUE "{'MsgData'{'MsgValue'[*{'value'"
+
+#define KEY_MESSAGE_VALUE_WHEEL "{'MsgData'{'MsgValue'[*{'wheel'"
+#define KEY_MESSAGE_VALUE_VELOCITY "{'MsgData'{'MsgValue'[*{'velocity'"
+#define KEY_MESSAGE_VALUE_TIME "{'MsgData'{'MsgValue'[*{'time'"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,18 +49,19 @@ ALGOID myReplyMessage;
 char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 	struct jReadElement element;
 	int i;
+	int result;
 
 	// ENTETE DE MESSAGE
-		jRead_string((char *)srcBuffer, "{'To'", AlgoidMessageRX.msgTo, 15, NULL );
-		jRead_string((char *)srcBuffer, "{'From'", AlgoidMessageRX.msgFrom, 15, NULL );
-		AlgoidMessageRX.msgID= jRead_int((char *)srcBuffer,  "{'MsgID'", NULL);
+		jRead_string((char *)srcBuffer, KEY_TO, AlgoidMessageRX.msgTo, 15, NULL );
+		jRead_string((char *)srcBuffer, KEY_FROM, AlgoidMessageRX.msgFrom, 15, NULL );
+		AlgoidMessageRX.msgID= jRead_int((char *)srcBuffer,  KEY_MSGID, NULL);
 
 	// MESSAGE TYPE
 				char myDataString[20];
 				// Clear string
 				for(i=0;i<20;i++) myDataString[i]=0;
 
-				jRead_string((char *)srcBuffer,  "{'Message'{'MsgType'",myDataString,15, NULL);
+				jRead_string((char *)srcBuffer,  KEY_MESSAGE_TYPE,myDataString,15, NULL);
 
 				AlgoidMessageRX.msgType=	-1;
 				if(!strcmp(myDataString, "command")) AlgoidMessageRX.msgType = COMMAND;
@@ -60,7 +75,7 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 	// MESSAGE PARAM
 				// Clear string
 				for(i=0;i<20;i++) myDataString[i]=0;
-				jRead_string((char *)srcBuffer,  "{'Message'{'MsgParam'",myDataString,15, NULL);
+				jRead_string((char *)srcBuffer,  KEY_MESSAGE_PARAM,myDataString,15, NULL);
 
 				AlgoidMessageRX.msgParam=-1;
 					if(!strcmp(myDataString, "forward")) AlgoidMessageRX.msgParam = FORWARD;
@@ -73,25 +88,27 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 					if(!strcmp(myDataString, "2wd")) AlgoidMessageRX.msgParam = LL_WD;
 
 	// DATA ARRAY
-				  jRead((char *)srcBuffer, "{'Message'{'MsgValue'", &element );
+				  jRead((char *)srcBuffer, KEY_MESSAGE_VALUE, &element );
 				  if( element.dataType == JREAD_ARRAY )
 				  {
 					  AlgoidMessageRX.msgValueCnt=element.elements;
 				      for(i=0; i<element.elements; i++ )    // loop for no. of elements in JSON
 				      {
 				    	  if(AlgoidMessageRX.msgParam == LL_WD){
-					    	  jRead_string((char *)srcBuffer, "{'Message'{'MsgValue'[*{'wheel'", AlgoidMessageRX.msgValArray[i].wheel, 15, &i );
-					    	  AlgoidMessageRX.msgValArray[i].velocity= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'velocity'", &i);
-					    	  AlgoidMessageRX.msgValArray[i].time= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'time'", &i);
+				    		  result = jRead_string((char *)srcBuffer, KEY_MESSAGE_VALUE_WHEEL, AlgoidMessageRX.msgValArray[i].wheel, 15, &i );
+					    	  AlgoidMessageRX.msgValArray[i].velocity= jRead_long((char *)srcBuffer, KEY_MESSAGE_VALUE_VELOCITY, &i);
+					    	  AlgoidMessageRX.msgValArray[i].time= jRead_long((char *)srcBuffer, KEY_MESSAGE_VALUE_TIME, &i);
 				    	  }
 				    	  else{
-					    	  jRead_string((char *)srcBuffer, "{'Message'{'MsgValue'[*{'mode'", AlgoidMessageRX.msgValArray[i].mode, 15, &i );
-					    	  AlgoidMessageRX.msgValArray[i].value= jRead_long((char *)srcBuffer, "{'Message'{'MsgValue'[*{'value'", &i);
+				    		  result = jRead_string((char *)srcBuffer, KEY_MESSAGE_VALUE_MODE, AlgoidMessageRX.msgValArray[i].mode, 15, &i );
+					    	  AlgoidMessageRX.msgValArray[i].value= jRead_long((char *)srcBuffer, KEY_MESSAGE_VALUE_VALUE, &i);
 				    	  }
-
+				    	  if(result == 0)
+				    		  return 0;
 				    }
 				  }
 
+				  //
 				  if(AlgoidMessageRX.msgParam < 0 || AlgoidMessageRX.msgType < 0){
 					  return 0;
 				  }else return 1;
@@ -102,10 +119,8 @@ char GetAlgoidMsg(ALGOID destMessage, char *srcBuffer){
 // replyToHost
 // convert the structure in JSON format & Send to host
 // -----------------------------------------------------------------------------
-void SetAlgoidAck(char * buffer, struct JsonCommand srcMessage, char * myID, char * ackMessage){
-//	struct jWriteControl jwc;
+void SetAlgoidAck(char * buffer, ALGOID srcMessage, char * myID, char * ackMessage){
 	unsigned int buflen= 1024;
-	int i;
 
 // Formatage de la réponse en JSON
 	jwOpen( buffer, buflen, JW_OBJECT, JW_PRETTY );		// start root object
